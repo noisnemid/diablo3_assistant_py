@@ -1,29 +1,7 @@
 """
 DIABLO III ASSISTANT SCRIPT
-===========================
 
-:VERSION: 20211108-STABLE
-
-According to good ideas of August Mao,
-this script was changed to a data-driven coding pattern,
-which provides a higher level of abstraction.
-Ceres,Nov,2021
-
-LIBS NEEDED
-===========
-
-pip install keyboard
-pip install mouse
-pip install ruamel.yaml
-
-KNOWN ISSUES
-============
-
-#.  Held keys will be released if they are touched
-    while they are loopped by the script, but the others are still looping.
-    This will makes the loop incomplete, which I am not sure
-    whether it's an issue. You could simply press <stop> and <start> hot key
-    to restart the loop.
+VERSION 20211108-Stable
 
 """
 
@@ -66,7 +44,7 @@ def logId():
 LOG_ID = logId()
 
 logging.basicConfig(
-    level='INFO',  # 修改日志级别为DEBUG可查看更多运行信息
+    level='INFO',  # 修改日志级别为 DEBUG 可查看更多运行信息
     format='%(id)s > %(asctime)s - %(filename)s, line:%(lineno)d > %(levelname)s: %(message)s',
     # filename=lambda x: os.path.abspath(x)
 )
@@ -170,43 +148,6 @@ def autoForge(args: dict):
             else:
                 break
             sleep(args['interval_sec'])
-
-
-def cdrAdjust(args: dict):
-    # 技能冷却动态校正,正在施工……
-    coords = {
-        '1920x1080': {
-            'w': 63,
-            'h': 63,
-            'gap': 4,
-            0: [627, 995, 690, 1058],  # 技能1图标检测框左上角坐标
-            1: [0, 995, 0, 1058],  # 技能1图标检测框左上角坐标
-            2: [0, 995, 0, 1058],  # 以下为其它技能坐标，将在计算后更新为一个4元素list以界定一个正方形
-            3: [0, 995, 0, 1058],
-            4: [0, 995, 0, 1058],
-            5: [0, 995, 0, 1058]
-        },
-        '2240x1400': {
-            'w': 87,
-            'h': 87,
-            'gap': 5,
-            0: [689, 1289, 771, 1374],  # 技能1图标检测框左上角坐标
-            1: [0, 995, 0, 1374],  # 技能1图标检测框左上角坐标
-            2: [0, 995, 0, 1374],  # 以下为其它技能坐标，将在计算后更新为一个4元素list以界定一个正方形
-            3: [0, 995, 0, 1374],
-            4: [0, 995, 0, 1374],
-            5: [0, 995, 0, 1374]
-        }
-    }
-    scr_res = args['screen_resolution']
-    coords = coords[scr_res]
-
-    for i in range(1, 6):
-        coords[i][0] = coords[0][0] + (coords['w'] + coords['gap']) * i
-        coords[i][2] = coords[0][2] + (coords['w'] + coords['gap']) * i
-
-    logging.debug(f'cdrAdjust:{coords=}', extra={'id': next(LOG_ID)})
-
 
 class Stroke(Event):
     def __init__(self, stroke: dict):
@@ -382,10 +323,10 @@ class D3Macro():
             keyboard.on_release_key(rdk, self.pullOneBulletLoop)
 
         # addons
-        for addon, setup in self.global_plan['addons'].items():
-            addon_func = globals()[addon]
+        for addon_name, setup in self.global_plan['addons'].items():
+            addon_func = globals()[addon_name] # 同名函数，这就是为什么conf.py中的GLOBAL中的键值不能随便改：因为这里会被作为函数名称使用。
             keyboard.add_hotkey(
-                self.global_plan['addons'][addon]['on'],
+                setup['on'],
                 addon_func,
                 args=(setup,),
             )
@@ -396,7 +337,6 @@ class D3Macro():
         for k, v in self.loops.items():
             Thread(target=self.loopIt, args=[k, v], name=k, daemon=True).start()
         Thread(target=self.registerHotKeys, daemon=True).start()
-        # Thread(target=cdrAdjust, args=(self.global_plan,), daemon=True).start()
 
         while not self.events['exit'].is_set():
             self.events['exit'].wait()
@@ -409,6 +349,6 @@ if __name__ == '__main__':
     plan = 'plan_dh_冰吞'
     plan = 'plan_武僧伊娜分身速刷(火)'
     plan = 'plan_法师_火鸟幻身'
-    plan = 'plan_武僧伊娜分身速刷(水)'
     plan = 'plan_武僧伊娜分身速刷(速)'
+    plan = 'plan_武僧伊娜分身速刷(水)'
     D3Macro(Path(__file__).parent/'conf.yml', plan).do()

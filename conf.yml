@@ -1,27 +1,28 @@
 README_HELP: |-
   这是为 Diablo III 辅助脚本制作的配置文档，为YAML格式。
+
   方案名称随意，只要不带空格即可。建议的话，当然是纯小写字母、数字和下划线这三者。
 
   概念：
 
-  GLOBAL及相关数据为全局配置。其它为个性化BD配置。
+  GLOBAL 为全局配置。其它为个性化配置，即为各种 build (简称BD或bd) 专用的配置。
 
-  bullets中是只进行一次的序列，由triggers中的按键触发，只存在于GLOBAL设置中。
-  loops包含的是循环执行的序列，由 switch.on 触发，只存在于bd设置中。
+  bullets 表示只进行一次的序列，由 triggers 中的按键触发，只存在于 GLOBAL 设置中。
+  loops 包含的是循环执行的序列，由 switch.on 触发，只存在于 bd 设置中。
 
-  默认/建议一个键只在不同的loop中出现一次以避免键冲突。
+  默认/建议一个键 在 loops 和/或 bullets 中仅出现一次以避免键冲突。
 
-  bullets和loops为什么形式一样但是要分开？
+  bullets 和 loops为什么形式一样但是要分开？
   因为只运行一次的序列和持续循环的序列在绝大多数情况下是不同的。
 
-  combos包含的是只执行一次的简单按键序列，无特化参数，
+  combos 包含的是只执行一次的简单按键序列，无特化参数，默认各键之间有100毫秒（0.1秒）时延。
   用于简单的连环招式、快速功能组，以及脚本开发期间快速测试。
 
   按键序列中包含的是单独按键参数。每序列可包含多个键（一个键的设置参数集合称为一个stroke）。
 
   附: 极简YAML规范
 
-  YAML是一种比JSON更贴近人类阅读体验的数据格式，以层次化的缩进表示包含关系。
+  YAML 是一种比 JSON 更贴近人类阅读体验的数据格式，以层次化的缩进表示包含关系。
 
   字段名/键名：
     不包含空格，字段名后是冒号+空格。
@@ -51,6 +52,7 @@ README_HELP: |-
   单行注释不能出现于值行内（会与字面值混淆）
 
   引用：
+  
   字段名: &锚点名
 
 # 这是注释
@@ -59,7 +61,7 @@ GLOBAL:
   # 此宏为全局宏，将与BD类的宏同时加载。
   # 此处数据键名代码强绑定，勿作键名修改，只能修改值，
   # 盖因其逻辑之非通用性，对其参数结构、代码逻辑作特殊化处理，故此。
-  screen_resolution: &screen_resolution "1920x1080"
+  screen_resolution: &sr "1920x1080"
   bullets: # 只运行一次的序列或进程
     mouse_right_30_times: &bullet1 # 右键30次连点血岩快赌
       - key: mouse_right
@@ -74,12 +76,12 @@ GLOBAL:
     autoDecom:
       on: f5+f6
       break: esc
-      screen_resolution: *screen_resolution
+      screen_resolution: *sr
       # 如果因点击太快造成性能问题，将interval_sec改为非0（每两次分解的间隔时间，例如0.03为30毫秒）
       interval_sec: 0
     autoForge:
       on: f7
-      screen_resolution: *screen_resolution
+      screen_resolution: *sr
       break: esc
       # 如果因点击太快造成性能问题，将interval_sec改为非0（每两次分解的间隔时间，例如0.03为30毫秒）
       interval_sec: 0.05
@@ -108,6 +110,10 @@ DEVTEST:
   combos: # 手动触发
     f4: [space, space, space, 2, 2, 2, 2, 2, 2, 2]
   triggers: {}
+
+
+# Bellow are some demo-builds
+# ['mouse_left', 'mouse_right', 'mouse_middle']
 
 plan_dh_冰吞:
   notes: |-
@@ -224,7 +230,6 @@ plan_武僧伊娜分身速刷(火):
     {}
   triggers: {}
 
-
 plan_武僧伊娜分身速刷(水):
   notes: |-
     F1开启，F2或t回城自动结束，F12退出程序
@@ -332,7 +337,6 @@ plan_武僧伊娜分身速刷(速):
   combos: # 手动触发
     {}
   triggers: {}
-
 
 plan_法师_火鸟幻身:
   notes: |-
