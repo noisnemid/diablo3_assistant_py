@@ -44,7 +44,7 @@ def logId():
 LOG_ID = logId()
 
 logging.basicConfig(
-    level='INFO',  # 修改日志级别为 DEBUG 可查看更多运行信息
+    level='DEBUG',  # 日志级别  INFO/DEBUG 等。
     format='%(id)s > %(asctime)s - %(filename)s, line:%(lineno)d > %(levelname)s: %(message)s',
     # filename=lambda x: os.path.abspath(x)
 )
@@ -149,10 +149,10 @@ def autoForge(args: dict):
                 break
             sleep(args['interval_sec'])
 
-class Stroke(Event):
+class Stroke:
     def __init__(self, stroke: dict):
         # about the stroke data scheme, see the conf.yml
-        super().__init__()
+        # super().__init__()
         self.__dict__.update(stroke)
         if 'mouse' in self.key:
             self.mouse_key = self.key.split('_')[1]
@@ -189,7 +189,7 @@ class Stroke(Event):
         if self.status == 'enabled':
             logging.debug(f'STROKE {self.key} releasing...', extra={'id': next(LOG_ID)})
             self.keyUp()
-            self.set()
+            # self.set()
 
 
 class D3Macro():
@@ -347,8 +347,8 @@ class D3Macro():
 if __name__ == '__main__':
     plan = 'DEVTEST'
     plan = 'plan_dh_冰吞'
-    plan = 'plan_武僧伊娜分身速刷(火)'
     plan = 'plan_法师_火鸟幻身'
-    plan = 'plan_武僧伊娜分身速刷(速)'
+    plan = 'plan_武僧伊娜分身速刷(火)'
     plan = 'plan_武僧伊娜分身速刷(水)'
+    plan = 'plan_武僧伊娜分身速刷(速)'
     D3Macro(Path(__file__).parent/'conf.yml', plan).do()
