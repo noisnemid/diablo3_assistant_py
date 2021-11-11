@@ -1,7 +1,7 @@
 """
 DIABLO III ASSISTANT SCRIPT
 
-VERSION 20211108-Stable
+VERSION 20211111-Stable
 
 """
 
@@ -322,7 +322,7 @@ class D3Macro():
 
     def loopIt(self, key: str, loop: dict):
         # mind that the wait() must be in the 'current' thread,
-        # or it will be in a sub-thread and 'sleeping' will fail
+        # or it will be in a sub-thread and current thread's expected 'sleeping' will fail
         while True:
             with self.condition:
                 if not self.stopped:
@@ -336,6 +336,7 @@ class D3Macro():
                             self.condition.wait(stk.wait_after_each_release_sec)
                         self.condition.wait(stk.wait_after_repeat_sec)
                 else:
+                    # don't forget this, or CPU will burn!
                     self.condition.wait()
 
     def registerHotKeys(self):

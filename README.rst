@@ -18,6 +18,13 @@ Install Needed Libs
     pip install keyboard
     pip install mouse
     pip install ruamel.yaml
+    pip install psutil
+
+Note that:
+
+    ``psutil`` will be easily installed if you are using python version <= 3.9.x.
+    If you are using python 3.10.x, it will be complex to install this package for it might
+    through out errors about lack of installation of C++ Builders.
 
 Edit/Confirm Configurations
 --------------------------
@@ -49,13 +56,19 @@ Run the Script and Enjoy it!
 Known Issues
 ------------
 
-Versions <= 20211109:
+Versions <= 20211111:
 
     Held keys will be released if they are touched
     while they are loopped by the script, but the others are still looping.
     This will makes the loop incomplete, which I am not sure
     whether it's an issue. You could simply press <stop> and <start> hot key
     to restart the loop.
+
+Release Notes
+=============
+
+See the commit messages.
+
 
 Thanks To
 =========
