@@ -15,23 +15,9 @@ from pathlib import Path
 from threading import Condition, Lock, Thread, current_thread, Event
 import logging
 
-'''
-SOME CONSTANTS
+# MOUSE_NAMES = ['mouse_left', 'mouse_right', 'mouse_middle']
 
-logging levels
-
-CRITICAL = 50
-FATAL = CRITICAL
-ERROR = 40
-WARNING = 30
-WARN = WARNING
-INFO = 20
-DEBUG = 10
-NOTSET = 0
-
-MOUSE_NAMES = ['mouse_left', 'mouse_right', 'mouse_middle']
-
-'''
+# DEV ENVIRONMENTS
 
 
 def logId():
@@ -43,8 +29,14 @@ def logId():
 
 LOG_ID = logId()
 
+
+def lid(args=None):
+    global LOG_ID
+    return {'id': next(LOG_ID)}
+
+
 logging.basicConfig(
-    level='DEBUG',  # 日志级别  INFO/DEBUG 等。
+    level='INFO',  # 日志级别  INFO/DEBUG 等。
     format='%(id)s > %(asctime)s - %(filename)s, line:%(lineno)d > %(levelname)s: %(message)s',
     # filename=lambda x: os.path.abspath(x)
 )
@@ -53,8 +45,8 @@ yaml = YAML(pure=True)
 yaml.sort_base_mapping_type_on_output = None
 yaml.indent(mapping=2, sequence=4, offset=2)
 
-# addons, standalone functions
 
+# ADDONS
 
 def autoDecom(args: dict):
     # 自动分解
@@ -116,7 +108,7 @@ def autoForge(args: dict):
     scr_res = args['screen_resolution']
     coords = coords[scr_res]
 
-    logging.debug(f'autoForge:{coords}', extra={'id': next(LOG_ID)})
+    logging.debug(f'autoForge:{coords}', extra=lid())
 
     lines = (0, 2, 4, 1, 3, 5)  # 跳行，防止重复点击到空的格子影响观感(循环的次数是一样的)
     for i in lines:
@@ -149,6 +141,9 @@ def autoForge(args: dict):
                 break
             sleep(args['interval_sec'])
 
+# MACRO CODES
+
+
 class Stroke:
     def __init__(self, stroke: dict):
         # about the stroke data scheme, see the conf.yml
@@ -158,9 +153,10 @@ class Stroke:
             self.mouse_key = self.key.split('_')[1]
             self.dev_type = 'mouse'
             self.force_holding = False
+            self.action = None  # 1=up,0=down
         else:
             self.dev_type = 'keyboard'
-        logging.debug(f'Stroke: {self.__dict__}', extra={'id': next(LOG_ID)})
+        logging.debug(f'Stroke: {self.__dict__}', extra=lid())
 
     def stroke(self):
         if self.status == 'enabled':
@@ -177,6 +173,10 @@ class Stroke:
                 keyboard.press(self.key)
             else:
                 mouse.press(button=self.mouse_key)
+            self.action = 0
+            logging.debug(f'{self.key } ↓', extra=lid())
+        else:
+            logging.debug(f'{self.key } disabled', extra=lid())
 
     def keyUp(self):
         if self.status == 'enabled':
@@ -184,13 +184,15 @@ class Stroke:
                 keyboard.release(self.key)
             else:
                 mouse.release(button=self.mouse_key)
+            self.action = 1
+            logging.debug(f'{self.key } ↑', extra=lid())
+        else:
+            logging.debug(f'{self.key } disabled', extra=lid())
 
     def release(self):
-        if self.status == 'enabled':
-            logging.debug(f'STROKE {self.key} releasing...', extra={'id': next(LOG_ID)})
+        if self.status == 'enabled' and self.action != 0:
+            logging.debug(f'STROKE {self.key} releasing...', extra=lid())
             self.keyUp()
-            # self.set()
-
 
 class D3Macro():
     def __init__(self, config_yaml_file: os.PathLike, plan_name: str):
@@ -199,7 +201,7 @@ class D3Macro():
         self.plan_name = plan_name
         with open(self.config_yaml_file, 'r', encoding='utf8') as yr:
             self.conf = yaml.load(yr)
-            logging.debug(json.dumps(self.conf, ensure_ascii=False, indent=4), extra={'id': next(LOG_ID)})
+            logging.debug(json.dumps(self.conf, ensure_ascii=False, indent=4), extra=lid())
             self.global_plan = self.conf['GLOBAL']
             self.plan = self.conf[self.plan_name]
 
@@ -235,31 +237,25 @@ class D3Macro():
                 self.loop_strokes[name] = stk
 
     def on(self, event: keyboard.KeyboardEvent = None):
-        while True:
-            if self.condition.acquire():
-                if self.stopped:
-                    self.stopped = False
-                    self.condition.notify_all()
-                    logging.info('Turn ON!', extra={'id': next(LOG_ID)})
-                self.condition.release()
-                break
+        with self.condition:
+            if self.stopped:
+                self.stopped = False
+                self.condition.notify_all()
+                logging.info('Turn ON!', extra=lid())
 
     def off(self, event: keyboard.KeyboardEvent = None):
-        for name in self.loop_strokes:
-            self.loop_strokes[name].release()
-        while True:
-            if self.condition.acquire():
-                if not self.stopped:
-                    self.stopped = True
-                    self.condition.notify_all()
-                    logging.info('Turned OFF.', extra={'id': next(LOG_ID)})
-                self.condition.release()
-                break
+        with self.condition:
+            if not self.stopped:
+                self.stopped = True
+                self.condition.notify_all()
+                for name in self.loop_strokes:
+                    self.loop_strokes[name].release()
+                logging.info('Turned OFF.', extra=lid())
 
     def exit(self, event: keyboard.KeyboardEvent = None):
         self.off()
         self.events['exit'].set()
-        logging.info('Exited.', extra={'id': next(LOG_ID)})
+        logging.info('Exited.', extra=lid())
 
     def combo(self, event: keyboard.KeyboardEvent = None):
         key = event.name
@@ -275,7 +271,7 @@ class D3Macro():
         for stroke in loopOnce:
             stk = Stroke(stroke)
             _ev.clear()
-            logging.debug(stk.__dict__, extra={'id': next(LOG_ID)})
+            logging.debug(stk.__dict__, extra=lid())
             while not _ev.is_set():
                 for i in range(stk.repeat):
                     stk.keyDown()
@@ -290,11 +286,9 @@ class D3Macro():
         # mind that the wait() must be in the 'current' thread,
         # or it will be in a sub-thread and 'sleeping' will fail
         while True:
-            if self.condition.acquire():
-                if self.stopped == True:
-                    self.condition.wait()
-                else:
-                    logging.debug(f'Thread { current_thread().name} starts-->', extra={'id': next(LOG_ID)})
+            with self.condition:
+                if not self.stopped:
+                    logging.debug(f'Thread { current_thread().name} starts-->', extra=lid())
                     for stroke in loop:
                         stk = self.loop_strokes[stroke['key']]
                         for i in range(stk.repeat):
@@ -303,7 +297,6 @@ class D3Macro():
                             stk.keyUp()
                             self.condition.wait(stk.wait_after_each_release_sec)
                         self.condition.wait(stk.wait_after_repeat_sec)
-                self.condition.release()
 
     def registerHotKeys(self):
         # switches
@@ -315,7 +308,7 @@ class D3Macro():
         keyboard.on_release_key(self.switches['exit'], self.exit)
         keyboard.add_hotkey('ctrl+q', self.exit, args=())
 
-        logging.debug(self.combos, extra={'id': next(LOG_ID)})
+        logging.debug(self.combos, extra=lid())
         for k, v in self.combos.items():
             keyboard.on_release_key(k, self.combo)
 
@@ -324,7 +317,7 @@ class D3Macro():
 
         # addons
         for addon_name, setup in self.global_plan['addons'].items():
-            addon_func = globals()[addon_name] # 同名函数，这就是为什么conf.py中的GLOBAL中的键值不能随便改：因为这里会被作为函数名称使用。
+            addon_func = globals()[addon_name]  # 同名函数，这就是为什么conf.py中的GLOBAL中的键值不能随便改：因为这里会被作为函数名称使用。
             keyboard.add_hotkey(
                 setup['on'],
                 addon_func,
@@ -333,7 +326,7 @@ class D3Macro():
         keyboard.wait(self.switches['exit'])
 
     def do(self):
-        logging.info(f'CURRENT RUNNING MACRO：{self.plan_name}', extra={'id': next(LOG_ID)})
+        logging.info(f'CURRENT RUNNING MACRO：{self.plan_name}', extra=lid())
         for k, v in self.loops.items():
             Thread(target=self.loopIt, args=[k, v], name=k, daemon=True).start()
         Thread(target=self.registerHotKeys, daemon=True).start()
@@ -341,14 +334,15 @@ class D3Macro():
         while not self.events['exit'].is_set():
             self.events['exit'].wait()
         else:
-            logging.info('Program Terminated.', extra={'id': next(LOG_ID)})
+            logging.info('Program Terminated.', extra=lid())
 
 
 if __name__ == '__main__':
     plan = 'DEVTEST'
+    plan = 'plan_武僧伊娜分身速刷(速)'
+    plan = 'plan_武僧伊娜分身速刷(火)'
     plan = 'plan_dh_冰吞'
     plan = 'plan_法师_火鸟幻身'
-    plan = 'plan_武僧伊娜分身速刷(火)'
     plan = 'plan_武僧伊娜分身速刷(水)'
-    plan = 'plan_武僧伊娜分身速刷(速)'
+    plan = 'plan_武僧伊娜分身冲层'
     D3Macro(Path(__file__).parent/'conf.yml', plan).do()

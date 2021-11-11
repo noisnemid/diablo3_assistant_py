@@ -150,18 +150,18 @@ plan_dh_冰吞:
         wait_after_each_release_sec: 0.5
         repeat: 1
         wait_after_repeat_sec: 0
-    战宠:
+    蓄势待发:
       - key: mouse_left
         status: enabled
         hold_sec: 0
-        wait_after_each_release_sec: 0.1
+        wait_after_each_release_sec: 0.2
         repeat: 1
         wait_after_repeat_sec: 0
-    蓄势待发:
+    战宠/刀扇:
       - key: mouse_right
         status: enabled
-        hold_sec: 1
-        wait_after_each_release_sec: 1
+        hold_sec: 0
+        wait_after_each_release_sec: 0.2
         repeat: 1
         wait_after_repeat_sec: 0
     药水:
@@ -216,12 +216,12 @@ plan_武僧伊娜分身速刷(火):
       - key: mouse_left
         status: enabled
         hold_sec: 0
-        wait_after_each_release_sec: 0.05
+        wait_after_each_release_sec: 0.2
         repeat: 1
         wait_after_repeat_sec: 0
     传送:
       - key: "3"
-        status: disabled禁用
+        status: DISABLED
         hold_sec: 0
         wait_after_each_release_sec: 0.5
         repeat: 1
@@ -270,12 +270,12 @@ plan_武僧伊娜分身速刷(水):
       - key: mouse_left
         status: enabled
         hold_sec: 0
-        wait_after_each_release_sec: 0.05
+        wait_after_each_release_sec: 0.2
         repeat: 1
         wait_after_repeat_sec: 0
     传送:
       - key: "3"
-        status: disabled禁用
+        status: DISABLED
         hold_sec: 0
         wait_after_each_release_sec: 0.5
         repeat: 1
@@ -324,14 +324,67 @@ plan_武僧伊娜分身速刷(速):
       - key: mouse_left
         status: 禁用enabled
         hold_sec: 0
-        wait_after_each_release_sec: 0.05
+        wait_after_each_release_sec: 0.2
         repeat: 1
         wait_after_repeat_sec: 0
     传送:
       - key: "3"
-        status: disabled禁用
+        status: DISABLED
         hold_sec: 0
         wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+  combos: # 手动触发
+    {}
+  triggers: {}
+
+plan_武僧伊娜分身冲层:
+  notes: |-
+    F1开启，F2或t回城自动结束，F12退出程序
+  switches:
+    on: [f1]
+    off: [f2, t]
+    exit: f12
+  loops: # 自动循环
+    风雷冲+打拳:
+      - key: "1"
+        status: enabled
+        hold_sec: 4
+        wait_after_each_release_sec: 0
+        repeat: 1
+        wait_after_repeat_sec: 0
+      - key: '2'
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.15
+        repeat: 4
+        wait_after_repeat_sec: 0
+    禅定:
+      - key: "3"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    黑人:
+      - key: "4"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 7
+        repeat: 1
+        wait_after_repeat_sec: 0
+    飓风破:
+      - key: "mouse_left"
+        status: disabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 2.6
+        repeat: 1
+        wait_after_repeat_sec: 0
+    幻身:
+      - key: mouse_right
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 1
         repeat: 1
         wait_after_repeat_sec: 0
   combos: # 手动触发
