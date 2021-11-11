@@ -14,6 +14,8 @@ import os
 from pathlib import Path
 from threading import Condition, Lock, Thread, current_thread, Event
 import logging
+import psutil
+import signal
 
 # MOUSE_NAMES = ['mouse_left', 'mouse_right', 'mouse_middle']
 
@@ -27,17 +29,19 @@ def logId():
         yield hex(n)
 
 
-LOG_ID = logId()
+_log_id = logId()
 
 
 def lid(args=None):
-    global LOG_ID
-    return {'id': next(LOG_ID)}
-
+    global _log_id
+    return {'id': next(_log_id)}
 
 logging.basicConfig(
-    level='INFO',  # 日志级别  INFO/DEBUG 等。
+    level=logging.INFO,  # 日志级别  INFO/DEBUG 等。
     format='%(id)s > %(asctime)s - %(filename)s, line:%(lineno)d > %(levelname)s: %(message)s',
+    filename=Path(__file__).parent/'d3a.log',
+    filemode='a',
+    encoding='utf8'
     # filename=lambda x: os.path.abspath(x)
 )
 
@@ -46,7 +50,30 @@ yaml.sort_base_mapping_type_on_output = None
 yaml.indent(mapping=2, sequence=4, offset=2)
 
 
+class MemWatch():
+    def __init__(self, mem_cap: int = 200_000_000):
+        """Watch the memory using info of this script.
+
+        Args:
+            mem_cap (int):  the max byte of memory this program could use. If the script consues a size of memory larger
+                            than this value, it will exit. default = 20,000,000 bytes.
+        """
+        self.mem_cap = mem_cap
+        self.mem_used = 0
+        self.t = Thread(target=self._watch)
+        self.t.start()
+
+    def _watch(self):
+        while True:
+            self.mem_used = psutil.Process(os.getpid()).memory_info().rss
+            if self.mem_used >= self.mem_cap:
+                logging.warning(f'{self.mem_used=} :memory overflow risk detected! main program terminated by force!',extra=lid())
+                os.kill(os.getpid(),signal.SIGTERM)
+            sleep(1)
+
+
 # ADDONS
+
 
 def autoDecom(args: dict):
     # 自动分解
@@ -194,6 +221,7 @@ class Stroke:
             logging.debug(f'STROKE {self.key} releasing...', extra=lid())
             self.keyUp()
 
+
 class D3Macro():
     def __init__(self, config_yaml_file: os.PathLike, plan_name: str):
         # load the configuration
@@ -256,6 +284,7 @@ class D3Macro():
         self.off()
         self.events['exit'].set()
         logging.info('Exited.', extra=lid())
+        os.kill(os.getpid(),signal.SIGTERM)
 
     def combo(self, event: keyboard.KeyboardEvent = None):
         key = event.name
@@ -338,6 +367,7 @@ class D3Macro():
 
 
 if __name__ == '__main__':
+    MemWatch()
     plan = 'DEVTEST'
     plan = 'plan_武僧伊娜分身速刷(速)'
     plan = 'plan_武僧伊娜分身速刷(火)'
