@@ -21,7 +21,6 @@ import signal
 
 # DEV ENVIRONMENTS
 
-
 def logId():
     n = 0
     while True:
@@ -36,13 +35,13 @@ def lid(args=None):
     global _log_id
     return {'id': next(_log_id)}
 
+
 logging.basicConfig(
-    level=logging.INFO,  # 日志级别  INFO/DEBUG 等。
+    level=logging.INFO,  # 日志级别  WARNING/INFO/DEBUG 等。
     format='%(id)s > %(asctime)s - %(filename)s, line:%(lineno)d > %(levelname)s: %(message)s',
-    filename=Path(__file__).parent/'d3a.log',
+    filename=Path(__file__).parent / 'd3a.log',
     filemode='a',
     encoding='utf8'
-    # filename=lambda x: os.path.abspath(x)
 )
 
 yaml = YAML(pure=True)
@@ -50,26 +49,36 @@ yaml.sort_base_mapping_type_on_output = None
 yaml.indent(mapping=2, sequence=4, offset=2)
 
 
-class MemWatch():
-    def __init__(self, mem_cap: int = 200_000_000):
+class Benchmark():
+    def __init__(self, mem_cap: int = 200_000_000, cpu_cap=25):
         """Watch the memory using info of this script.
 
         Args:
             mem_cap (int):  the max byte of memory this program could use. If the script consues a size of memory larger
                             than this value, it will exit. default = 20,000,000 bytes.
+            cpu_cap (int):  the max percentage of cpu this program could use.
+                            If the script consues larger cpu usage
+                            than this value, it will exit. default = 25.
+                            (in fact it will be lower than 1 if it runs normally)
         """
         self.mem_cap = mem_cap
+        self.cpu_cap = cpu_cap
         self.mem_used = 0
+        self.cpu_used = 0
         self.t = Thread(target=self._watch)
         self.t.start()
 
     def _watch(self):
+        sleep(1)
         while True:
-            self.mem_used = psutil.Process(os.getpid()).memory_info().rss
-            if self.mem_used >= self.mem_cap:
-                logging.warning(f'{self.mem_used=} :memory overflow risk detected! main program terminated by force!',extra=lid())
-                os.kill(os.getpid(),signal.SIGTERM)
             sleep(1)
+            pid = os.getpid()
+            self.mem_used = psutil.Process(pid).memory_info().rss
+            self.cpu_used = psutil.Process(pid).cpu_percent(interval=1)
+            logging.debug(f'{pid=} CURENT MEMORY_RSS: {self.mem_used} Bytes & CPU_USED:{self.cpu_used}%', extra=lid())
+            if self.mem_used >= self.mem_cap or self.cpu_used >= self.cpu_cap:
+                logging.warning(f'MEMORY_RSS: {self.mem_used} Bytes & CPU_USED:{self.cpu_used}% > Performance risk(s) detected! Main program terminated by force!', extra=lid())
+                os.kill(os.getpid(), signal.SIGTERM)
 
 
 # ADDONS
@@ -284,7 +293,7 @@ class D3Macro():
         self.off()
         self.events['exit'].set()
         logging.info('Exited.', extra=lid())
-        os.kill(os.getpid(),signal.SIGTERM)
+        os.kill(os.getpid(), signal.SIGTERM)
 
     def combo(self, event: keyboard.KeyboardEvent = None):
         key = event.name
@@ -326,6 +335,8 @@ class D3Macro():
                             stk.keyUp()
                             self.condition.wait(stk.wait_after_each_release_sec)
                         self.condition.wait(stk.wait_after_repeat_sec)
+                else:
+                    self.condition.wait()
 
     def registerHotKeys(self):
         # switches
@@ -367,7 +378,10 @@ class D3Macro():
 
 
 if __name__ == '__main__':
-    MemWatch()
+    
+    # performance watcher
+    Benchmark()
+
     plan = 'DEVTEST'
     plan = 'plan_武僧伊娜分身速刷(速)'
     plan = 'plan_武僧伊娜分身速刷(火)'
