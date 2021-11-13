@@ -21,6 +21,7 @@ import signal
 
 # DEV ENVIRONMENTS
 
+
 def logId():
     n = 0
     while True:
@@ -379,15 +380,19 @@ class D3Macro():
 
 
 if __name__ == '__main__':
-    
-    # performance watcher
-    Benchmark()
 
     plan = 'DEVTEST'
     plan = 'plan_武僧伊娜分身速刷(速)'
     plan = 'plan_武僧伊娜分身速刷(火)'
     plan = 'plan_dh_冰吞'
     plan = 'plan_法师_火鸟幻身'
-    plan = 'plan_武僧伊娜分身速刷(水)'
     plan = 'plan_武僧伊娜分身冲层'
+    plan = 'plan_武僧伊娜分身速刷(水)'
+
+    print(plan)
+
+    # performance watcher
+    Benchmark()
+
+    # load a plan
     D3Macro(Path(__file__).parent/'conf.yml', plan).do()
