@@ -15,10 +15,7 @@ Install Needed Libs
 
 .. code-blocks::
 
-    pip install keyboard
-    pip install mouse
-    pip install ruamel.yaml
-    pip install psutil
+    pip install keyboard mouse ruamel.yaml psutil
 
 Note that:
 
