@@ -1,0 +1,811 @@
+README_HELP: |-
+  这是为 Diablo III 辅助脚本制作的配置文档，为YAML格式。
+
+  方案名称随意，只要不带空格即可。建议的话，当然是纯小写字母、数字和下划线这三者。
+
+  概念：
+
+  GLOBAL 为全局配置。其它为个性化配置，即为各种 build (简称BD或bd) 专用的配置。
+
+  bullets 表示只进行一次的序列，由 triggers 中的按键触发，只存在于 GLOBAL 设置中。
+  loops 包含的是循环执行的序列，由 switch.on 触发，只存在于 bd 设置中。
+
+  默认/建议一个键 在 loops 和/或 bullets 中仅出现一次以避免键冲突。
+
+  bullets 和 loops为什么形式一样但是要分开？
+  因为只运行一次的序列和持续循环的序列在绝大多数情况下是不同的。
+
+  combos 包含的是只执行一次的简单按键序列，无特化参数，默认各键之间有100毫秒（0.1秒）时延。
+  用于简单的连环招式、快速功能组，以及脚本开发期间快速测试。
+
+  按键序列中包含的是单独按键参数。每序列可包含多个键（一个键的设置参数集合称为一个stroke）。
+
+  附: 极简YAML规范
+
+  YAML 是一种比 JSON 更贴近人类阅读体验的数据格式，以层次化的缩进表示包含关系。
+
+  字段名/键名：
+    不包含空格，字段名后是冒号+空格。
+    键名如果是数值时，如果需要被解析为字符串，
+    需要以引号（单/双引号视情况决定）包围，否则会被解析为数值键名，同时VSCODE的YAML插件也会无法解析其大纲结构。
+
+  标量值：
+    不可分割的字面值。
+    不包含引号时，由解析引擎负责实现自动检测类型
+    类型包括：整数、浮点、日期/时间、布尔、Null空值，字符串。
+    其中，字符串支持单引号包围、双引号包围、无引号包围。
+    无引号与单引号效果相同，此时所写即为字面值。
+    双引号会对转义字符进行解析处理，例如写作 "\n" 会被解析为换行符。
+
+  对象、多行数组、复合结构值：需换行缩进
+
+  特别注意：一定要注意冒号后的空格！
+  特别注意：一定要注意冒号后的空格！！
+  特别注意：一定要注意冒号后的空格！！！
+
+  多行文本值：
+  |   表示下方可以包含已整体缩进的文本保留行间换行，
+  |-  表示其中的换行保留，最末尾的换行不保留。
+
+  注释：
+  YAML支持单行注释，使用
+  单行注释不能出现于值行内（会与字面值混淆）
+
+  引用：
+
+  字段名: &锚点名
+
+# 这是注释
+
+GLOBAL:
+  # 此宏为全局宏，将与BD类的宏同时加载。
+  # 此处数据键名代码强绑定，勿作键名修改，只能修改值，
+  # 盖因其逻辑之非通用性，对其参数结构、代码逻辑作特殊化处理，故此。
+  screen_resolution: &sr "2560x1440"
+  bullets: # 只运行一次的序列或进程
+    mouse_right_30_times: &bullet1 # 右键30次连点血岩快赌
+      - key: mouse_right
+        status: enabled
+        hold_sec: 0.0075
+        wait_after_each_release_sec: 0
+        repeat: 30
+        wait_after_repeat_sec: 0
+  triggers:
+    f9: *bullet1
+  addons:
+    autoDecom:
+      on: f6
+      break: esc
+      screen_resolution: *sr
+      # 如果因点击太快造成性能问题，将interval_sec改为非0（每两次分解的间隔时间，例如0.03为30毫秒）
+      interval_sec: 0
+    autoForge:
+      on: f7
+      screen_resolution: *sr
+      break: esc
+      # 如果因点击太快造成性能问题，将interval_sec改为非0（每两次分解的间隔时间，例如0.03为30毫秒）
+      interval_sec: 0.05
+
+DEVTEST:
+  notes: |-
+    F2开启，F3结束，F12退出程序
+  switches:
+    on: [f2]
+    off: [f3]
+    exit: f12
+  loops: # 自动循环
+    foo:
+      - key: "1"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.1
+        repeat: 3
+        wait_after_repeat_sec: 0
+      - key: "return"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+  combos: # 手动触发
+    f4: [space, space, space, 2, 2, 2, 2, 2, 2, 2]
+  triggers: {}
+
+# Bellow are some demo-builds
+# ['mouse_left', 'mouse_right', 'mouse_middle']
+
+plan_dh_冰吞:
+  notes: |-
+    F1开启，F2或t回城自动结束，F12退出程序
+  switches:
+    on: [f1, f10]
+    off: [f2, space, t]
+    exit: f12
+  loops: # 自动循环
+    扫射&吞噬:
+      - key: "1"
+        status: enabled
+        hold_sec: 1.3
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+      - key: "2"
+        status: enabled
+        hold_sec: 0.233
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    烟雾:
+      - key: "3"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 1.4
+        repeat: 1
+        wait_after_repeat_sec: 0
+    复仇:
+      - key: "4"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+    蓄势待发:
+      - key: mouse_left
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.2
+        repeat: 1
+        wait_after_repeat_sec: 0
+    战宠/刀扇:
+      - key: mouse_right
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.2
+        repeat: 1
+        wait_after_repeat_sec: 0
+    药水:
+      - key: q
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+  combos: # 手动触发
+    f1: [2, 2, 2, 2]
+  triggers: {}
+
+plan_dh_S25掠夺:
+  notes: |-
+    F1开启，F2或t回城自动结束，F12退出程序
+  switches:
+    on: [f1]
+    off: [f2, t]
+    exit: f12
+  loops: # 自动循环
+    战宠:
+      - key: "1"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    蓄势待发:
+      - key: "2"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    烟雾:
+      - key: "3"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 1.4
+        repeat: 1
+        wait_after_repeat_sec: 0
+    复仇:
+      - key: "4"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    药水:
+      - key: q
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+  combos: # 手动触发
+    space: []
+  triggers: {}
+
+plan_dh_三刀:
+  notes: |-
+    F1开启，F2或t回城自动结束，F12退出程序
+  switches:
+    on: [f1, f10]
+    off: [f2]
+    exit: f12
+  loops: # 自动循环
+    战宠:
+      - key: "2"
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 0.2
+        repeat: 1
+        wait_after_repeat_sec: 0
+    复仇:
+      - key: "4"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+    主动:
+      - key: mouse_right
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+      - key: mouse_left
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 0.1
+        repeat: 10
+        wait_after_repeat_sec: 0
+    药水:
+      - key: q
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+  combos: # 手动触发
+    space: [1]
+  triggers: {}
+
+plan_武僧伊娜分身速刷(火):
+  notes: |-
+    F1开启，F2或t回城自动结束，F12退出程序
+  switches:
+    on: [f1]
+    off: [f2, t]
+    exit: f12
+  loops: # 自动循环
+    飓风破:
+      - key: "1"
+        status: DISABLED
+        hold_sec: 0
+        wait_after_each_release_sec: 1.4
+        repeat: 1
+        wait_after_repeat_sec: 0
+    传送:
+      - key: "2"
+        status: DISABLED
+        hold_sec: 0
+        wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+    禅定:
+      - key: "3"
+        status: DISABLED
+        hold_sec: 0
+        wait_after_each_release_sec: 1.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+    幻身:
+      - key: "4"
+        status: DISABLED
+        hold_sec: 0
+        wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+    黑人:
+      - key: "mouse_right"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    打拳:
+      - key: mouse_left
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.2
+        repeat: 1
+        wait_after_repeat_sec: 0
+  combos: # 手动触发
+    {}
+  triggers: {}
+
+plan_武僧伊娜神龙火幻_冲层:
+  notes: |-
+    F1开启，F2或t回城自动结束，F12退出程序
+  switches:
+    on: [f1]
+    off: [f2, t]
+    exit: f12
+  loops: # 自动循环
+    飓风破:
+      - key: "1"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 4
+        repeat: 1
+        wait_after_repeat_sec: 0
+    传送:
+      - key: "2"
+        status: DISABLED
+        hold_sec: 0
+        wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+    禅定:
+      - key: "3"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 1.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+    幻身:
+      - key: "4"
+        status: DISABLED
+        hold_sec: 0
+        wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+    金轮阵:
+      - key: "mouse_right"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    打拳:
+      - key: mouse_left
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.2
+        repeat: 1
+        wait_after_repeat_sec: 0
+  combos: # 手动触发
+    "space": ["1", "1", "4", "2"]
+  triggers: {}
+
+plan_武僧伊娜分身速刷(水):
+  notes: |-
+    F1开启，F2或t回城自动结束，F12退出程序
+  switches:
+    on: [f1]
+    off: [f2, t]
+    exit: f12
+  loops: # 自动循环
+    飓风破:
+      - key: "1"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 1.4
+        repeat: 1
+        wait_after_repeat_sec: 0
+    传送:
+      - key: "2"
+        status: DISABLED
+        hold_sec: 0
+        wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+    禅定:
+      - key: "3"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 1.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+    幻身:
+      - key: "4"
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    打拳:
+      - key: mouse_left
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.2
+        repeat: 1
+        wait_after_repeat_sec: 0
+    黑人:
+      - key: "mouse_right"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 1
+        repeat: 1
+        wait_after_repeat_sec: 0
+  combos: # 手动触发
+    {}
+  triggers: {}
+
+plan_武僧伊娜分身速刷(速):
+  notes: |-
+    F1开启，F2或t回城自动结束，F12退出程序
+  switches:
+    on: [f1]
+    off: [f2, t]
+    exit: f12
+  loops: # 自动循环
+    劲风煞:
+      - key: "1"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 6
+        repeat: 1
+        wait_after_repeat_sec: 0
+    真言:
+      - key: "2"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 3
+        repeat: 1
+        wait_after_repeat_sec: 0
+    幻身:
+      - key: mouse_right
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 10
+        repeat: 1
+        wait_after_repeat_sec: 0
+    黑人:
+      - key: "4"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    打拳:
+      - key: mouse_left
+        status: 禁用enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.2
+        repeat: 1
+        wait_after_repeat_sec: 0
+    传送:
+      - key: "3"
+        status: DISABLED
+        hold_sec: 0
+        wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+  combos: # 手动触发
+    {}
+  triggers: {}
+
+plan_武僧伊娜双手杖安逸BD:
+  notes: |-
+    F1开启，F2或t回城自动结束，F12退出程序
+  switches:
+    on: [f1]
+    off: [f2, t]
+    exit: f12
+  loops: # 自动循环
+    飓风破:
+      - key: "1"
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    风雷冲:
+      - key: "2"
+        status: disbaled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.15
+        repeat: 4
+        wait_after_repeat_sec: 0
+    金轮阵:
+      - key: "3"
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    幻身:
+      - key: "4"
+        status: disabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 0
+        repeat: 1
+        wait_after_repeat_sec: 0
+    禅定:
+      - key: "mouse_left"
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 0
+        repeat: 1
+        wait_after_repeat_sec: 0
+    真言:
+      - key: "mouse_right"
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 3
+        repeat: 1
+        wait_after_repeat_sec: 0
+  combos: # 手动触发
+    space: [1, 4, 2]
+  triggers: {}
+
+plan_法师_火鸟幻身:
+  notes: |-
+    F1开启，F2或t回城自动结束，F12退出程序
+  switches:
+    on: [f1]
+    off: [f2, t]
+    exit: f12
+  loops: # 自动循环
+    聚能爆破:
+      - key: "4"
+        status: enabled
+        hold_sec: 0.5
+        wait_after_each_release_sec: 0
+        repeat: 1
+        wait_after_repeat_sec: 0.01
+    引导:
+      - key: "mouse_right"
+        status: enabled
+        hold_sec: 900
+        wait_after_each_release_sec: 0
+        repeat: 1
+        wait_after_repeat_sec: 0
+  combos: # 手动触发
+    "1": [1, 2]
+    "2": [3, 3, 2]
+    "up": []
+    "down": []
+    "left": []
+    "right": []
+  triggers: {}
+
+plan_豆角荆棘滚键盘:
+  notes: |-
+    F1开启，F2或t回城自动结束，F12退出程序
+  switches:
+    on: [f1]
+    off: [f2, t]
+    exit: f12
+  loops: # 自动循环
+    a:
+      - key: "1"
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 0
+        repeat: 1
+        wait_after_repeat_sec: 0
+    b:
+      - key: "2"
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 0
+        repeat: 1
+        wait_after_repeat_sec: 0
+    c:
+      - key: "3"
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 0
+        repeat: 1
+        wait_after_repeat_sec: 0
+    d:
+      - key: "4"
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 0
+        repeat: 1
+        wait_after_repeat_sec: 0
+    e:
+      - key: "e"
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    f:
+      - key: "mouse_left"
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 0
+        repeat: 1
+        wait_after_repeat_sec: 0
+    g:
+      - key: "mouse_right"
+        status: disabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 3
+        repeat: 1
+        wait_after_repeat_sec: 0
+  combos: # 手动触发
+    {}
+  triggers: {}
+
+plan_s27_dh_扫射对戒三刀:
+  notes: |-
+    F1开启，F2或t回城自动结束，F12退出程序
+  switches:
+    on: [f1, f10]
+    off: [f2, space, t]
+    exit: f12
+  loops: # 自动循环
+    扫射:
+      - key: "1"
+        status: enabled
+        hold_sec: 2.0
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+      - key: "2" # 主动
+        status: enabled
+        hold_sec: 0.4
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    烟雾:
+      - key: "3"
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    暗影:
+      - key: "4"
+        status: disabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.3
+        repeat: 1
+        wait_after_repeat_sec: 0
+    复仇/左键:
+      - key: mouse_left
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.2
+        repeat: 1
+        wait_after_repeat_sec: 0
+    三刀:
+      - key: mouse_right
+        status: disabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.2
+        repeat: 1
+        wait_after_repeat_sec: 0
+    药水:
+      - key: q
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+  combos: # 手动触发
+    f1: [4]
+  triggers: {}
+
+plan_s27_dh_机械扫射多重整活:
+  notes: |-
+    F1开启，F2或t回城自动结束，F12退出程序
+  switches:
+    on: [f1, f10]
+    off: [f2, space, t]
+    exit: f12
+  loops: # 自动循环
+    扫射&吞噬:
+      - key: "1"
+        status: enabled
+        hold_sec: 1.3
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+      - key: "2"
+        status: enabled
+        hold_sec: 0.233
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    烟雾:
+      - key: "3"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 1.4
+        repeat: 1
+        wait_after_repeat_sec: 0
+    战宠:
+      - key: "4"
+        status: disabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+    复仇:
+      - key: mouse_left
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.2
+        repeat: 1
+        wait_after_repeat_sec: 0
+    多重:
+      - key: mouse_right
+        status: disabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.2
+        repeat: 1
+        wait_after_repeat_sec: 0
+    药水:
+      - key: q
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+  combos: # 手动触发
+    f1: [2, 2, 2, 2]
+  triggers: {}
+
+plan_s27_dh_扫射不洁多重:
+  notes: |-
+    F1开启，F2或t回城自动结束，F12退出程序
+  switches:
+    on: [f1, f10]
+    off: [f2, space, t]
+    exit: f12
+  loops: # 自动循环
+    扫射:
+      - key: "1"
+        status: enabled
+        hold_sec: 3
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    暗影之力:
+      - key: "2"
+        status: enabled
+        hold_sec: 0.1
+        wait_after_each_release_sec: 5
+        repeat: 1
+        wait_after_repeat_sec: 0
+    烟雾弹:
+      - key: "3"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    复仇:
+      - key: "4"
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    蓄势待发:
+      - key: mouse_left
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.1
+        repeat: 1
+        wait_after_repeat_sec: 0
+    多重:
+      - key: mouse_right
+        status: disabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.2
+        repeat: 1
+        wait_after_repeat_sec: 0
+    药水:
+      - key: q
+        status: enabled
+        hold_sec: 0
+        wait_after_each_release_sec: 0.5
+        repeat: 1
+        wait_after_repeat_sec: 0
+  combos: # 手动触发
+    f1: []
+  triggers: {}
